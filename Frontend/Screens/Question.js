@@ -8,18 +8,22 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+
 } from "react-native";
+import axios from "axios";
 
 
 const RadioButton = ({ options }) => {
     const [selectedOption, setSelectedOption] = useState(null);
+
   
     const handleOptionSelect = (option) => {
       setSelectedOption(option);
      
       console.log('Selected Option:', option);
     };
+
   
     return (
       <View>
@@ -73,28 +77,88 @@ const RadioButton = ({ options }) => {
 
 const Question = () => {
  
-    const options = ['1. Never', '2. Almost Never', '3. Sometimes', '4. Fairly Often', '5. Very Often']; // Your list of options
+    const[options,SetOptions] = useState([]);
+    const [ids, setIds] = useState([]);
+    const [question, setQuestion] = useState('');
+    const [id, setId] = useState('');
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
+    useEffect(() => {
+
+      const fetchQuestionIds = async () => {
+          try {
+              const response = await axios.get('http://192.168.1.27:8070/question/get-all-question-ids');
+              console.log(response.data);
+              setIds(response.data);
+          } catch (err) {
+              console.log(err);
+          }
+      };
+      fetchQuestionIds();
+  }, []);
+
+  useEffect(() => {
+      const fetchQuestions = async () => {
+          try {
+              // Update the id before making the API call
+              const currentId = ids[currentQuestionIndex]._id;
+              setId(currentId);
+              console.log(id);
+          } catch (err) {
+              console.log(err);
+          }
+      };
+      fetchQuestions();
+  }, [currentQuestionIndex, ids]);
+
+  useEffect(() => {
+      const fetchData = async () => {
+          try {
+              // Make sure id has been updated before making the API call
+              const response = await axios.get(`http://192.168.1.27:8070/question/get-question/${id}`);
+              console.log(response.data);
+              setQuestion(response.data);
+              
+              const optionTexts = response.data.options.map(option => option.OptionText);
+              SetOptions(optionTexts);
+          } catch (err) {
+              console.log(err);
+          }
+      };
+      fetchData();
+  }, [id]);
+
+  console.log(question);
+  console.log(currentQuestionIndex);
+  console.log(ids[currentQuestionIndex]);
+
+  const handleNextQuestion = () => {
+      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+  };
 
   return (
     <SafeAreaView>
-        <Image source={require("../assets/back.png")} style = {{width:53 , height:53 , marginLeft :25} }></Image>
-        <Image source={require("../assets/QuestionImage/qonevertical.png")} style = {{marginTop:32 , alignSelf:"center", width : 367}}></Image>
-        <Text style = {styles.quesnum}>Question 1 of 10</Text>
-        <Text style = {styles.quetext}>In the LAST MONTH, how often have you:</Text>
-        <Text style = {styles.question}>Been upset because of something that happened unexpectedly?</Text>
-        <Image source={require("../assets/QuestionImage/quesone.png")} style = {{width:180 , height:180, marginTop:33, alignSelf:"center"}}></Image>
-        
+          <Image source={require("../assets/back.png")} style={{ width: 53, height: 53, marginLeft: 25 }}></Image>
+          <Image source={require("../assets/QuestionImage/qonevertical.png")} style={{ marginTop: 32, alignSelf: "center", width: 367 }}></Image>
+          {question && question.question && (
+            <>
+              <Text style={styles.quesnum}>Question {currentQuestionIndex + 1} of {ids.length}</Text>
+              <Text style={styles.quetext}>{question.question}</Text>
 
-        <View style={{ margin: 15 }}>
-      <RadioButton options={options} />
+              <Image source={{ uri: question.imgurl }} style={{ width: 180, height: 180, marginTop: 33, alignSelf: "center" }}></Image>
+            </>
+          )}
+
+
+    <View style={{ margin: 15 }} >
+        <RadioButton options={options} />
     </View>
 
-    <TouchableOpacity style = {styles.nextbtn}>
-        <Text style={{ color: 'black', fontSize: 14 , alignSelf:"center" }}>Next</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.nextbtn} onPress={handleNextQuestion}>
+            <Text style={{ color: 'black', fontSize: 14, alignSelf: "center" }}>Next</Text>
+          </TouchableOpacity>
 
-    </SafeAreaView>
+        </SafeAreaView>
 
   )
 };

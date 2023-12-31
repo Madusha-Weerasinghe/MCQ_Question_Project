@@ -32,6 +32,8 @@ const questionRouter = require("./routes/question.route.js");
 app.use("/questions",questionRouter);
 //app.use("/options",optionRouter);
 
+app.use('/question',require('./routes/question.route'))
+
 
 app.listen(PORT, () => {
     console.log("server is up and running on port %d",PORT);

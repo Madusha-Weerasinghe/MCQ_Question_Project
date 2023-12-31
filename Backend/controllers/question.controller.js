@@ -5,22 +5,23 @@ const asyncHandler = require('express-async-handler');
 
 
 const createQuestionWithOptions = asyncHandler(async (req, res) => {
-    const { question, imgurl, options } = req.body;
+    const { question, options } = req.body;
 
     try {
-        // create Options 
+        // Create Options first
         const createdOptions = await OptionsModel.insertMany(options);
 
-        // take IDs from created options
+        // Extract IDs of created options
         const optionIds = createdOptions.map(option => option._id);
 
         // Create Question and associate Option IDs
         const newQuestion = await QuestionModel.create({
             question,
-            imgurl,
-            options: optionIds,
-            questionId: '' 
+            options: optionIds // Assign option IDs to the question
         });
+
+        // Update the question field in each option to reference the new question
+        await OptionsModel.updateMany({ _id: { $in: optionIds } }, { $set: { question: newQuestion._id } });
 
         res.status(201).json({
             message: 'Question created successfully',
@@ -33,44 +34,90 @@ const createQuestionWithOptions = asyncHandler(async (req, res) => {
 });
 
 
-//Fetch all data
 
-// const getAllQuestions = asyncHandler(async (req,res) => {
-//     const response = await QuestionModel.find({});
 
-//     if(response) {
-//         res.status(201).json(response);
-//     } else {
-//         res.status(200).json("no question found");
-//     }
+// Fetch all data
 
+const getAllQuestions = asyncHandler(async (req,res) => {
+    const questions = await QuestionModel.find().populate('options');
+
+    if (questions.length > 0) {
+        res.status(200).json(questions);
+    } else {
+        res.status(404).json({ message: "No questions found" });
+    }
  
-// });
+});
+const getAllQuestionIds = asyncHandler(async (req, res) => {
+    try {
+        const questionIds = await QuestionModel.find({}, '_id');
 
-//Fetch all data
+        if (questionIds.length > 0) {
+            res.status(200).json(questionIds);
+        } else {
+            res.status(404).json({ message: "No question IDs found" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
+const getQuestionById = asyncHandler(async (req, res) => {
+    try {
+        const id = req.params.id;
 
- 
+        // Find the question by ID and populate the options
+        const question = await QuestionModel.findById(id).populate('options');
+
+        if (question) {
+            res.status(200).json(question);
+        } else {
+            res.status(404).json({ error: 'Question not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
+ const getAllOptions = asyncHandler (async (req,res) => {
+    
+    const response2 = await OptionsModel.find({});
+
+   if(response2) {
+       res.status(201).json(response2);
+   } else {
+       res.status(200).json("no question found");
+   }
+ });
 
 
+const getOptionDetailsById = asyncHandler(async (req, res) => {
+    try {
+        const id = req.params.id;
 
+        // Find the option by ID
+        const option = await OptionsModel.findById(id);
 
-
-// const getAllOptions = asyncHandler (async (req,res) => {
-//     const response2 = await OptionsModel.find({});
-
-//     if(response2) {
-//         res.status(201).json(response2);
-//     } else {
-//         res.status(200).json("no question found");
-//     }
-// });
+        if (option) {
+            res.status(200).json(option);
+        } else {
+            res.status(404).json({ error: 'Option not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 module.exports = {
     createQuestionWithOptions,
-    //getAllQuestions,
-    //getAllOptions
+    getAllQuestions,
+    getAllOptions,
+    getOptionDetailsById,
+    getQuestionById,
+    getAllQuestionIds
 };
