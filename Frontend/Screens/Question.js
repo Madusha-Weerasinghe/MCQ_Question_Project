@@ -6,7 +6,10 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  ActivityIndicator
 } from "react-native";
+import { ProgressBar } from 'react-native-paper';
+
 import axios from "axios";
 
 const RadioButton = ({ options, selectedOption, onSelect }) => {
@@ -76,7 +79,9 @@ const Question = () => {
   const [id, setId] = useState('');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  
   useEffect(() => {
     const fetchQuestionIds = async () => {
       try {
@@ -113,6 +118,9 @@ const Question = () => {
       } catch (err) {
         console.log(err);
       }
+     finally {
+      setIsLoading(false);
+    }
     };
     fetchData();
   }, [id]);
@@ -121,40 +129,61 @@ const Question = () => {
     if (selectedOption) {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
       setSelectedOption(null); // Reset selected option when moving to the next question
+      setIsLoadingImage(true);
+
+      setTimeout(() => {
+        setIsLoadingImage(false);
+      }, 500); // Delay for one second (500 milliseconds)
     }
   };
 
   const handleBackButton = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
-      
+      setIsLoadingImage(true);
+
+      setTimeout(() => {
+        setIsLoadingImage(false);
+      }, 500); // Delay for one second (500 milliseconds)
     }
+
   };
 
   return (
     <SafeAreaView>
+      
       <TouchableOpacity onPress={handleBackButton}>
         <Image source={require("../assets/back.png")} style={{ width: 53, height: 53, marginLeft: 25 }} />
       </TouchableOpacity>
-      <Image source={require("../assets/QuestionImage/qonevertical.png")} style={{ marginTop: 32, alignSelf: "center", width: 367 }}></Image>
-      {question && question.question && (
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#4ABFB4" style={{ marginTop: 40 }} />
+      ) : (
         <>
-          <Text style={styles.quesnum}>Question {currentQuestionIndex + 1} of {ids.length}</Text>
-          <Text style={styles.quetext}>{question.question}</Text>
+          <ProgressBar progress={((currentQuestionIndex + 1) / ids.length)} color="#4ABFB4" style={{ marginTop: 32, width:375, alignSelf: "center", backgroundColor:"white" , height:10 , borderRadius:15}} />
+          {question && question.question && (
+            <>
+              <Text style={styles.quesnum}>Question {currentQuestionIndex + 1} of {ids.length}</Text>
+              <Text style={styles.quetext}>{question.question}</Text>
+              
+              {isLoadingImage ? (
+                <ActivityIndicator size="large" color="#4ABFB4" style={{ marginTop: 89 , marginBottom: 88}} />
+              ) : (
+                <Image source={{ uri: question.imgurl }} style={{ width: 180, height: 180, marginTop: 33, alignSelf: "center" }}></Image>
+              )}    
+              </>
+          )}
 
-          <Image source={{ uri: question.imgurl }} style={{ width: 180, height: 180, marginTop: 33, alignSelf: "center" }}></Image>
+          <View style={{ margin: 15 }} >
+            <RadioButton options={options} selectedOption={selectedOption} onSelect={setSelectedOption} />
+          </View>
         </>
       )}
-
-      <View style={{ margin: 15 }} >
-        <RadioButton options={options} selectedOption={selectedOption} onSelect={setSelectedOption} />
-      </View>
-
-      <TouchableOpacity style={styles.nextbtn} onPress={handleNextQuestion} disabled={!selectedOption}>
-        <Text style={{ color: 'black', fontSize: 14, alignSelf: "center" }}>Next</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.nextbtn} onPress={handleNextQuestion} disabled={!selectedOption}>
+          <Text style={{ color: 'black', fontSize: 14, alignSelf: "center" }}>Next</Text>
+        </TouchableOpacity>
+      
     </SafeAreaView>
-  );
+    );
 };
 
 const styles = StyleSheet.create({

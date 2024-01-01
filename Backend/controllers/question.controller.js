@@ -34,8 +34,6 @@ const createQuestionWithOptions = asyncHandler(async (req, res) => {
 });
 
 
-
-
 // Fetch all data
 
 const getAllQuestions = asyncHandler(async (req,res) => {
