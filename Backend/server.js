@@ -28,9 +28,11 @@ connection.once("open", () => {
 
 //const optionRouter = require("./routes/options.route.js");
 const questionRouter = require("./routes/question.route.js");
+const markRouter = require("./routes/mark.route.js");
 
 app.use("/questions",questionRouter);
 //app.use("/options",optionRouter);
+app.use("/mark",markRouter);
 
 app.use('/question',require('./routes/question.route'))
 
