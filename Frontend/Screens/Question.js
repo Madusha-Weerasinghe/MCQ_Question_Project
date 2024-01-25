@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator
 } from "react-native";
+
 import { ProgressBar } from 'react-native-paper';
 
 import axios from "axios";
@@ -85,7 +86,7 @@ const Question = () => {
   useEffect(() => {
     const fetchQuestionIds = async () => {
       try {
-        const response = await axios.get('http://192.168.1.27:8070/question/get-all-question-ids');
+        const response = await axios.get('http://192.168.1.26:8070/question/get-all-question-ids');
         console.log(response.data);
         setIds(response.data);
       } catch (err) {
@@ -110,7 +111,7 @@ const Question = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://192.168.1.27:8070/question/get-question/${id}`);
+        const response = await axios.get(`http://192.168.1.26:8070/question/get-question/${id}`);
         console.log(response.data);
         setQuestion(response.data);
         const optionTexts = response.data.options.map(option => option.OptionText);
